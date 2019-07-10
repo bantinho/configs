@@ -2,12 +2,16 @@
 
 # Gets your public ip address checks which country you are in and
 # displays that information in the statusbar
-#
-# https://www.maketecheasier.com/ip-address-geolocation-lookups-linux/
-isp="$( curl 'ifconfig.co/json' | sed 's/.*hostname\":\"//' | sed 's/\",\".*//' )"
-ifinstalled "geoiplookup" || exit
-addr="$(curl ifconfig.me 2>/dev/null)" || exit
-#grep "flag: " ~/.config/emoji | grep "$(geoiplookup $addr | sed 's/.*, //')" ""
-#country="$(grep "flag: " ~/.config/emoji | grep "$(geoiplookup $addr | sed 's/.*, //')" | sed "s/flag: ///;.*// ")"
-country="$(grep "flag: " ~/.config/emoji | grep "$(geoiplookup $addr | sed 's/.*, //')" | sed 's/;.*//' | awk '{print $1}' )"
-echo "${country} ${isp#*.}"
+
+# get json with info
+json=$( curl "ifconfig.co/json" 2>/dev/null)  || exit
+#echo ${json}
+# get isp infos and clean up
+isp="$( sed 's/.*hostname\":\"//' <<< ${json}  | sed 's/\",\".*//' )"
+isp="${isp#*.}"
+# get country
+country="$( sed 's/.*country\":\"//' <<< ${json}  | sed 's/\",\".*//' )"
+city="$( sed 's/.*city\":\"//' <<< ${json}  | sed 's/\",\".*//' )"
+
+flag="$(grep "flag: " ~/.config/emoji | grep "${country}" | sed 's/;.*//' | awk '{print $1}' )"
+echo "${flag} > ${city} > ${isp#*.}"
